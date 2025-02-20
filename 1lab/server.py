@@ -150,6 +150,10 @@ class FileManagerServer:
             with open(prog_name, 'w', encoding='utf-8') as f:
                 f.write(f"""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import sys
+# Force stdout to use UTF-8 encoding
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 if __name__ == '__main__':
     from datetime import datetime
     print("Программа {prog_name} запущена " + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
