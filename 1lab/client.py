@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-File Manager Client.
+File Manager Client
 
-Клиент подключается к серверу и позволяет отправлять команды:
-  - add <имя_программы>    : Создать и запустить программу.
-  - start <имя_программы>  : Запустить программу, если она не запущена.
-  - stop <имя_программы>   : Остановить запущенную программу.
-  - delete <имя_программы> : Удалить программу и её логи.
-  - getlog <имя_программы> : Получить логи указанной программы.
-  - exit                 : Завершить работу клиента.
+Connects to the server and sends commands:
+  - add <program_name>      : Create and start a program.
+  - start <program_name>    : Start an existing program.
+  - stop <program_name>     : Stop a running program.
+  - delete <program_name>   : Delete a program and its logs.
+  - getlog <program_name>   : Get logs for a program.
+  - programs                : List all programs with their status.
+  - exit                    : Exit the client.
 """
 
 import socket
@@ -17,51 +18,52 @@ import argparse
 
 def main():
     """
-    Парсит аргументы командной строки, устанавливает соединение с сервером,
-    и позволяет пользователю отправлять команды.
+    Parses command-line arguments, connects to the server,
+    and allows the user to send commands.
     """
     parser = argparse.ArgumentParser(description="File Manager Client")
     parser.add_argument('--host', type=str, default='127.0.0.1',
-                        help="IP-адрес сервера (по умолчанию: 127.0.0.1)")
+                        help="Server IP (default: 127.0.0.1)")
     parser.add_argument('--port', type=int, default=54321,
-                        help="Порт сервера (по умолчанию: 54321)")
+                        help="Server port (default: 54321)")
     args = parser.parse_args()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         client_socket.connect((args.host, args.port))
-        print(f"Подключено к серверу {args.host}:{args.port}")
+        print(f"Connected to server {args.host}:{args.port}")
     except Exception as e:
-        print(f"Не удалось подключиться к серверу: {e}")
+        print(f"Failed to connect to server: {e}")
         return
 
-    print("Доступные команды:")
-    print("  add <имя_программы>    - создать и запустить программу")
-    print("  start <имя_программы>  - запустить программу, если она не запущена")
-    print("  stop <имя_программы>   - остановить запущенную программу")
-    print("  delete <имя_программы> - удалить программу и её логи")
-    print("  getlog <имя_программы> - получить логи указанной программы")
-    print("  exit                 - завершить работу клиента")
+    print("Available commands:")
+    print("  add <program_name>    - Create and start a program")
+    print("  start <program_name>  - Start a program if not running")
+    print("  stop <program_name>   - Stop a running program")
+    print("  delete <program_name> - Delete a program and its logs")
+    print("  getlog <program_name> - Get logs for the program")
+    print("  programs              - List all programs and their status")
+    print("  exit                  - Exit the client")
 
     try:
         while True:
-            command = input("Введите команду: ").strip()
+            command = input("Enter command: ").strip()
             if not command:
                 continue
             if command.lower() == "exit":
-                print("Завершение работы клиента.")
+                print("Exiting client.")
                 break
 
             try:
                 client_socket.send(command.encode('utf-8'))
                 response = client_socket.recv(4096)
                 if not response:
-                    print("Соединение закрыто сервером.")
+                    print("Connection closed by server.")
                     break
-                print("Ответ сервера:")
+                print("Server response:")
                 print(response.decode('utf-8'))
             except Exception as e:
-                print(f"Ошибка при отправке команды: {e}")
+                print(f"Error sending command: {e}")
                 break
     finally:
         client_socket.close()

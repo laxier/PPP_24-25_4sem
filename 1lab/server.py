@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-File Manager Server.
+File Manager Server
 
-Поддерживает следующие команды, получаемые от клиента:
-  - add <имя_программы>    : Создать (если отсутствует) и запустить программу.
-  - start <имя_программы>  : Запустить программу, если она уже существует, но не запущена.
-  - stop <имя_программы>   : Остановить запущенную программу.
-  - delete <имя_программы> : Удалить программу и её логи.
-  - getlog <имя_программы> : Получить логи указанной программы.
+Supported commands from the client:
+  - add <program_name>      : Create (if missing) and start a program.
+  - start <program_name>    : Start a program if it exists and is not running.
+  - stop <program_name>     : Stop a running program.
+  - delete <program_name>   : Delete a program and its logs.
+  - getlog <program_name>   : Retrieve logs for the specified program.
+  - programs                : List all known programs with their status.
 """
 
 import os
@@ -22,20 +23,20 @@ import argparse
 import shutil
 from subprocess import Popen, PIPE
 
-# Настройка логирования сервера
+# Server logging configuration
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class ProgramRunner(threading.Thread):
     """
-    Класс для циклического запуска программы и записи её логов.
+    Thread that repeatedly runs a program and saves its output logs.
 
-    Атрибуты:
-        prog_name (str): Имя файла программы.
-        interval (int): Интервал между запусками.
-        state (dict): Общая структура состояния (для хранения путей к логам).
-        running (bool): Флаг, контролирующий работу цикла.
+    Attributes:
+        prog_name (str): Name of the program file.
+        interval (int): Delay (in seconds) between runs.
+        state (dict): Shared state dict for storing logs and status.
+        running (bool): Flag to control the running loop.
     """
 
     def __init__(self, prog_name, interval, state):
@@ -47,191 +48,210 @@ class ProgramRunner(threading.Thread):
 
     def run(self):
         """
-        Запускает цикл, в котором программа запускается с заданным интервалом,
-        а её вывод сохраняется в отдельную папку для логов.
+        Executes the program in a loop and writes the output to log files.
         """
         log_dir = f"{self.prog_name}_logs"
         os.makedirs(log_dir, exist_ok=True)
         while self.running:
             timestamp = int(time.time())
             output_file = os.path.join(log_dir, f"log_{timestamp}.txt")
-            logging.info(f"Запуск программы {self.prog_name}, лог в {output_file}")
+            logging.info(f"Running program {self.prog_name}, log: {output_file}")
             process = Popen([sys.executable, self.prog_name],
                             stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate()
             with open(output_file, 'w', encoding='utf-8') as f_out:
                 f_out.write(stdout.decode('utf-8') + "\n" +
                             stderr.decode('utf-8'))
-            self.state.setdefault(self.prog_name, []).append(output_file)
+            self.state.setdefault(self.prog_name, {})\
+                      .setdefault("logs", []).append(output_file)
             time.sleep(self.interval)
 
     def stop(self):
-        """Останавливает цикл запуска программы."""
+        """
+        Stops the running loop.
+        """
         self.running = False
 
 
 class FileManagerServer:
     """
-    Класс серверного приложения для управления программами.
+    Server application for managing programs.
 
-    Поддерживаемые команды:
-      - add <имя_программы>
-      - start <имя_программы>
-      - stop <имя_программы>
-      - delete <имя_программы>
-      - getlog <имя_программы>
+    Supported commands:
+      - add <program_name>
+      - start <program_name>
+      - stop <program_name>
+      - delete <program_name>
+      - getlog <program_name>
+      - programs
     """
 
     def __init__(self, host='0.0.0.0', port=54321, state_file='state.json',
                  interval=10):
         """
-        Инициализация сервера.
+        Initialize the server.
 
-        Аргументы:
-            host (str): Адрес для прослушивания.
-            port (int): Порт сервера.
-            state_file (str): Файл для хранения состояния.
-            interval (int): Интервал запуска программ.
+        Args:
+            host (str): Host address to bind.
+            port (int): Port number.
+            state_file (str): JSON file for saving the state.
+            interval (int): Program run interval in seconds.
         """
         self.host = host
         self.port = port
         self.state_file = state_file
         self.interval = interval
-        self.state = {}
+        self.state = {}  # Expected format: { prog_name: {"logs": [...], "status": "running"/"stopped"} }
         self.server_socket = None
         self.running = True
-        # Хранение запущенных программ: {prog_name: runner}
-        self.program_runners = {}
+        self.program_runners = {}  # Mapping of running programs: { prog_name: runner }
 
-        # Перехват SIGINT для корректного завершения (Ctrl+C)
         signal.signal(signal.SIGINT, self.handle_shutdown)
 
     def handle_shutdown(self, signum, frame):
         """
-        Обработчик сигнала завершения (Ctrl+C).
-
-        Аргументы:
-            signum (int): Номер сигнала.
-            frame: Текущий стек вызовов.
+        Signal handler for graceful shutdown.
         """
-        logging.info("Получен сигнал завершения, выключение сервера...")
+        logging.info("Shutdown signal received, shutting down server...")
         self.running = False
         self.shutdown()
 
     def load_state(self):
-        """Загружает состояние из файла state_file."""
+        """
+        Loads the JSON state from state_file.
+        """
         if os.path.exists(self.state_file):
             with open(self.state_file, 'r', encoding='utf-8') as f:
                 self.state = json.load(f)
-                logging.info("Состояние загружено")
+                logging.info("State loaded")
         else:
             self.state = {}
 
     def save_state(self):
-        """Сохраняет состояние в файл state_file."""
+        """
+        Saves the current state to state_file.
+        """
         with open(self.state_file, 'w', encoding='utf-8') as f:
             json.dump(self.state, f, indent=4, ensure_ascii=False)
-            logging.info("Состояние сохранено")
+            logging.info("State saved")
 
     def start_program(self, prog_name):
         """
-        Создает (если отсутствует) и запускает программу.
+        Creates (if missing) and starts the program.
+        
+        If the program file does not exist, it creates a minimal Python file that
+        prints its start time. Updates the state with a "status" field.
 
-        Если файла программы нет, создаётся минимальный Python-файл, который
-        выводит дату и время запуска.
+        Args:
+            prog_name (str): Name of the program file.
 
-        Аргументы:
-            prog_name (str): Имя программы (файла).
-
-        Возвращает:
-            bool: True, если программа запущена, False если уже запущена.
+        Returns:
+            bool: True if started, False if already running.
         """
         if not os.path.exists(prog_name):
             with open(prog_name, 'w', encoding='utf-8') as f:
                 f.write(f"""#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys
-# Force stdout to use UTF-8 encoding
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8')
 if __name__ == '__main__':
     from datetime import datetime
     print("Программа {prog_name} запущена " + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 """)
             os.chmod(prog_name, 0o755)
-            logging.info(f"Программа {prog_name} создана как пустой Python-файл")
+            logging.info(f"Program {prog_name} created as a minimal Python file")
+            self.state.setdefault(prog_name, {})["logs"] = []
+            self.state[prog_name]["status"] = "stopped"
         elif not os.access(prog_name, os.X_OK):
             os.chmod(prog_name, 0o755)
-            logging.info(f"Права на исполнение для {prog_name} изменены")
+            logging.info(f"Execution permissions updated for {prog_name}")
 
         if prog_name not in self.program_runners:
             runner = ProgramRunner(prog_name, self.interval, self.state)
             runner.start()
             self.program_runners[prog_name] = runner
-            logging.info(f"Программа {prog_name} запущена")
+            # Update status in state
+            self.state.setdefault(prog_name, {})["status"] = "running"
+            logging.info(f"Program {prog_name} started")
             return True
         else:
-            logging.info(f"Программа {prog_name} уже запущена")
+            logging.info(f"Program {prog_name} is already running")
             return False
 
     def stop_program(self, prog_name):
         """
-        Останавливает запущенную программу.
+        Stops a running program.
 
-        Аргументы:
-            prog_name (str): Имя программы.
+        Args:
+            prog_name (str): Name of the program.
 
-        Возвращает:
-            bool: True, если программа остановлена, False если не запущена.
+        Returns:
+            bool: True if stopped, False if not running.
         """
         if prog_name in self.program_runners:
             runner = self.program_runners.pop(prog_name)
             runner.stop()
-            logging.info(f"Программа {prog_name} остановлена")
+            self.state.setdefault(prog_name, {})["status"] = "stopped"
+            logging.info(f"Program {prog_name} stopped")
             return True
         else:
-            logging.info(f"Программа {prog_name} не запущена")
+            logging.info(f"Program {prog_name} is not running")
             return False
 
     def delete_program(self, prog_name):
         """
-        Останавливает и удаляет программу, а также удаляет её логи.
+        Stops and deletes a program along with its logs.
 
-        Аргументы:
-            prog_name (str): Имя программы.
+        Args:
+            prog_name (str): Name of the program.
 
-        Возвращает:
-            bool: True, если программа успешно удалена, False при ошибке.
+        Returns:
+            bool: True if deleted successfully, False on error.
         """
         self.stop_program(prog_name)
         if os.path.exists(prog_name):
             try:
                 os.remove(prog_name)
-                logging.info(f"Файл программы {prog_name} удалён")
+                logging.info(f"Program file {prog_name} deleted")
             except Exception as e:
-                logging.error(f"Ошибка при удалении файла {prog_name}: {e}")
+                logging.error(f"Error deleting file {prog_name}: {e}")
                 return False
         log_dir = f"{prog_name}_logs"
         if os.path.exists(log_dir) and os.path.isdir(log_dir):
             try:
                 shutil.rmtree(log_dir)
-                logging.info(f"Папка логов {log_dir} удалена")
+                logging.info(f"Log directory {log_dir} deleted")
             except Exception as e:
-                logging.error(f"Ошибка при удалении папки {log_dir}: {e}")
+                logging.error(f"Error deleting directory {log_dir}: {e}")
                 return False
         if prog_name in self.state:
             del self.state[prog_name]
         return True
 
+    def get_programs_status(self):
+        """
+        Retrieves the status of all known programs.
+
+        Returns:
+            str: A formatted string listing each program and its status.
+        """
+        # Union of programs from state and currently running ones
+        all_programs = set(self.state.keys()).union(set(self.program_runners.keys()))
+        if not all_programs:
+            return "No known programs.\n"
+        output = ""
+        for prog in sorted(all_programs):
+            status = self.state.get(prog, {}).get("status", "stopped")
+            output += f"{prog}: {status}\n"
+        return output
+
     def client_handler(self, conn, addr):
         """
-        Обрабатывает команды, получаемые от клиента.
+        Handles client commands.
 
-        Аргументы:
-            conn: Сокет соединения с клиентом.
-            addr: Адрес клиента.
+        Args:
+            conn: Client connection socket.
+            addr: Client address.
         """
-        logging.info(f"Новое подключение от {addr}")
+        logging.info(f"New connection from {addr}")
         try:
             while True:
                 data = conn.recv(1024)
@@ -242,69 +262,63 @@ if __name__ == '__main__':
                     prog_name = command.split(" ", 1)[1]
                     result = self.start_program(prog_name)
                     if result:
-                        conn.send(f"Программа {prog_name} добавлена\n"
-                                  .encode('utf-8'))
+                        conn.send(f"Program {prog_name} added and started\n".encode('utf-8'))
                     else:
-                        conn.send(f"Программа {prog_name} уже существует\n"
-                                  .encode('utf-8'))
+                        conn.send(f"Program {prog_name} already exists\n".encode('utf-8'))
                 elif command.startswith("start "):
                     prog_name = command.split(" ", 1)[1]
                     if prog_name in self.program_runners:
-                        conn.send(f"Программа {prog_name} уже запущена\n"
-                                  .encode('utf-8'))
+                        conn.send(f"Program {prog_name} is already running\n".encode('utf-8'))
                     else:
                         if os.path.exists(prog_name):
                             result = self.start_program(prog_name)
                             if result:
-                                conn.send(f"Программа {prog_name} запущена\n"
-                                          .encode('utf-8'))
+                                conn.send(f"Program {prog_name} started\n".encode('utf-8'))
                             else:
-                                conn.send(f"Ошибка при запуске программы {prog_name}\n"
-                                          .encode('utf-8'))
+                                conn.send(f"Error starting program {prog_name}\n".encode('utf-8'))
                         else:
-                            conn.send(f"Файл программы {prog_name} не найден\n"
-                                      .encode('utf-8'))
+                            conn.send(f"Program file {prog_name} not found\n".encode('utf-8'))
                 elif command.startswith("getlog "):
                     prog_name = command.split(" ", 1)[1]
-                    if prog_name in self.state:
+                    if prog_name in self.state and "logs" in self.state[prog_name]:
                         combined_output = ""
-                        for log_file in self.state[prog_name]:
+                        for log_file in self.state[prog_name]["logs"]:
                             if os.path.exists(log_file):
                                 with open(log_file, 'r', encoding='utf-8') as lf:
                                     combined_output += lf.read() + "\n"
                         conn.send(combined_output.encode('utf-8'))
                     else:
-                        conn.send(f"Программа {prog_name} не найдена\n"
-                                  .encode('utf-8'))
+                        conn.send(f"Program {prog_name} not found\n".encode('utf-8'))
                 elif command.startswith("stop "):
                     prog_name = command.split(" ", 1)[1]
                     if self.stop_program(prog_name):
-                        conn.send(f"Программа {prog_name} остановлена\n"
-                                  .encode('utf-8'))
+                        conn.send(f"Program {prog_name} stopped\n".encode('utf-8'))
                     else:
-                        conn.send(f"Программа {prog_name} не запущена\n"
-                                  .encode('utf-8'))
+                        conn.send(f"Program {prog_name} is not running\n".encode('utf-8'))
                 elif command.startswith("delete "):
                     prog_name = command.split(" ", 1)[1]
                     if self.delete_program(prog_name):
-                        conn.send(f"Программа {prog_name} удалена\n"
-                                  .encode('utf-8'))
+                        conn.send(f"Program {prog_name} deleted\n".encode('utf-8'))
                     else:
-                        conn.send(f"Ошибка при удалении программы {prog_name}\n"
-                                  .encode('utf-8'))
+                        conn.send(f"Error deleting program {prog_name}\n".encode('utf-8'))
+                elif command == "programs":
+                    status_output = self.get_programs_status()
+                    conn.send(status_output.encode('utf-8'))
                 else:
-                    conn.send("Неизвестная команда\n".encode('utf-8'))
+                    conn.send("Unknown command\n".encode('utf-8'))
         finally:
             conn.close()
 
     def run_server(self):
-        """Запускает сервер и начинает принимать подключения от клиентов."""
+        """
+        Starts the server and begins accepting client connections.
+        """
         self.load_state()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(5)
         self.server_socket.settimeout(1.0)
-        logging.info(f"Сервер запущен на {self.host}:{self.port}")
+        logging.info(f"Server running on {self.host}:{self.port}")
         try:
             while self.running:
                 try:
@@ -318,28 +332,32 @@ if __name__ == '__main__':
                                                  daemon=True)
                 client_thread.start()
         except Exception as e:
-            logging.error(f"Ошибка сервера: {e}")
+            logging.error(f"Server error: {e}")
         finally:
             self.shutdown()
 
     def shutdown(self):
-        """Останавливает сервер, завершает все программы и сохраняет состояние."""
+        """
+        Stops the server, stops all running programs, and saves state.
+        """
         self.running = False
         for prog in list(self.program_runners.keys()):
             self.stop_program(prog)
         self.save_state()
         if self.server_socket:
             self.server_socket.close()
-        logging.info("Сервер завершил работу")
+        logging.info("Server shut down")
 
 
 def main():
-    """Парсит аргументы командной строки и запускает сервер."""
+    """
+    Parses command-line arguments and starts the server.
+    """
     parser = argparse.ArgumentParser(description="File Manager Server")
     parser.add_argument('--port', type=int, default=54321,
-                        help="Порт сервера (по умолчанию: 54321)")
+                        help="Server port (default: 54321)")
     parser.add_argument('--interval', type=int, default=10,
-                        help="Интервал запуска программ (по умолчанию: 10 сек)")
+                        help="Interval between program runs (default: 10 sec)")
     args = parser.parse_args()
     server = FileManagerServer(port=args.port, interval=args.interval)
     server.run_server()
@@ -347,4 +365,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-ы
