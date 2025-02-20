@@ -1,0 +1,9 @@
+{
+    "python1.py": {
+        "logs": [
+            "python1.py_logs\\log_1740066211.txt",
+            "python1.py_logs\\log_1740066221.txt"
+        ],
+        "status": "stopped"
+    }
+}
