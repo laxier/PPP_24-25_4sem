@@ -15,9 +15,6 @@ Connects to the server and sends commands:
 import socket
 import argparse
 
-import socket
-import argparse
-
 def main():
     """
     Parses command-line arguments, connects to the server,
