@@ -15,6 +15,8 @@ Connects to the server and sends commands:
 import socket
 import argparse
 
+import socket
+import argparse
 
 def main():
     """
@@ -53,20 +55,28 @@ def main():
             if command.lower() == "exit":
                 print("Exiting client.")
                 break
-
             try:
                 client_socket.send(command.encode('utf-8'))
-                response = client_socket.recv(4096)
-                if not response:
-                    print("Connection closed by server.")
-                    break
+                full_response = b""
+                while True:
+                    part = client_socket.recv(4096)
+                    if len(part) == 0:
+                        print("Server closed the connection.")
+                        return
+                    full_response += part
+                    if b"END_OF_RESPONSE" in full_response:
+                        break
+
                 print("Server response:")
-                print(response.decode('utf-8'))
+                print(full_response.decode('utf-8'))
             except Exception as e:
                 print(f"Error sending command: {e}")
                 break
     finally:
         client_socket.close()
+
+if __name__ == '__main__':
+    main()
 
 
 if __name__ == '__main__':
