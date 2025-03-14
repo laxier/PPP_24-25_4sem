@@ -27,6 +27,15 @@ from subprocess import Popen, PIPE
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
+def send_response(conn, message):
+    """
+    Отправляет сообщение с маркером конца ответа.
+    """
+    if isinstance(message, str):
+        message = message.encode('utf-8')
+    message += b"END_OF_RESPONSE"
+    conn.send(message)
+
 
 class ProgramRunner(threading.Thread):
     """
@@ -265,22 +274,22 @@ if __name__ == '__main__':
                     prog_name = command.split(" ", 1)[1]
                     result = self.start_program(prog_name)
                     if result:
-                        conn.send(f"Program {prog_name} added and started\n".encode('utf-8'))
+                        send_response(conn,f"Program {prog_name} added and started\n".encode('utf-8'))
                     else:
-                        conn.send(f"Program {prog_name} already exists\n".encode('utf-8'))
+                        send_response(conn,f"Program {prog_name} already exists\n".encode('utf-8'))
                 elif command.startswith("start "):
                     prog_name = command.split(" ", 1)[1]
                     if prog_name in self.program_runners:
-                        conn.send(f"Program {prog_name} is already running\n".encode('utf-8'))
+                        send_response(conn,f"Program {prog_name} is already running\n".encode('utf-8'))
                     else:
                         if os.path.exists(prog_name):
                             result = self.start_program(prog_name)
                             if result:
-                                conn.send(f"Program {prog_name} started\n".encode('utf-8'))
+                                send_response(conn,f"Program {prog_name} started\n".encode('utf-8'))
                             else:
-                                conn.send(f"Error starting program {prog_name}\n".encode('utf-8'))
+                                send_response(conn,f"Error starting program {prog_name}\n".encode('utf-8'))
                         else:
-                            conn.send(f"Program file {prog_name} not found\n".encode('utf-8'))
+                            send_response(conn,f"Program file {prog_name} not found\n".encode('utf-8'))
                 elif command.startswith("getlog "):
                     prog_name = command.split(" ", 1)[1]
                     if prog_name in self.state and "logs" in self.state[prog_name]:
@@ -289,26 +298,26 @@ if __name__ == '__main__':
                             if os.path.exists(log_file):
                                 with open(log_file, 'r', encoding='utf-8') as lf:
                                     combined_output += lf.read() + "\n"
-                        conn.send(combined_output.encode('utf-8'))
+                        send_response(conn,combined_output.encode('utf-8'))
                     else:
-                        conn.send(f"Program {prog_name} not found\n".encode('utf-8'))
+                        send_response(conn,f"Program {prog_name} not found\n".encode('utf-8'))
                 elif command.startswith("stop "):
                     prog_name = command.split(" ", 1)[1]
                     if self.stop_program(prog_name):
-                        conn.send(f"Program {prog_name} stopped\n".encode('utf-8'))
+                        send_response(conn,f"Program {prog_name} stopped\n".encode('utf-8'))
                     else:
-                        conn.send(f"Program {prog_name} is not running\n".encode('utf-8'))
+                        send_response(conn,f"Program {prog_name} is not running\n".encode('utf-8'))
                 elif command.startswith("delete "):
                     prog_name = command.split(" ", 1)[1]
                     if self.delete_program(prog_name):
-                        conn.send(f"Program {prog_name} deleted\n".encode('utf-8'))
+                        send_response(conn,f"Program {prog_name} deleted\n".encode('utf-8'))
                     else:
-                        conn.send(f"Error deleting program {prog_name}\n".encode('utf-8'))
+                        send_response(conn,f"Error deleting program {prog_name}\n".encode('utf-8'))
                 elif command == "programs":
                     status_output = self.get_programs_status()
-                    conn.send(status_output.encode('utf-8'))
+                    send_response(conn,status_output.encode('utf-8'))
                 else:
-                    conn.send("Unknown command\n".encode('utf-8'))
+                    send_response(conn, "Unknown command\n".encode('utf-8'))
         finally:
             conn.close()
 

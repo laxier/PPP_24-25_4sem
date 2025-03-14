@@ -2,7 +2,71 @@
     "python1.py": {
         "logs": [
             "python1.py_logs\\log_1740066211.txt",
-            "python1.py_logs\\log_1740066221.txt"
+            "python1.py_logs\\log_1740066221.txt",
+            "python1.py_logs\\log_1741959619.txt",
+            "python1.py_logs\\log_1741959630.txt",
+            "python1.py_logs\\log_1741959641.txt",
+            "python1.py_logs\\log_1741959652.txt",
+            "python1.py_logs\\log_1741959663.txt",
+            "python1.py_logs\\log_1741959673.txt"
+        ],
+        "status": "stopped"
+    },
+    "programma": {
+        "logs": [
+            "programma_logs\\log_1741958282.txt",
+            "programma_logs\\log_1741958293.txt",
+            "programma_logs\\log_1741958304.txt",
+            "programma_logs\\log_1741958314.txt",
+            "programma_logs\\log_1741958325.txt",
+            "programma_logs\\log_1741958336.txt",
+            "programma_logs\\log_1741958347.txt",
+            "programma_logs\\log_1741958357.txt",
+            "programma_logs\\log_1741958368.txt",
+            "programma_logs\\log_1741958379.txt",
+            "programma_logs\\log_1741958390.txt",
+            "programma_logs\\log_1741958400.txt",
+            "programma_logs\\log_1741958411.txt",
+            "programma_logs\\log_1741958422.txt",
+            "programma_logs\\log_1741958433.txt",
+            "programma_logs\\log_1741958444.txt",
+            "programma_logs\\log_1741958454.txt",
+            "programma_logs\\log_1741958465.txt",
+            "programma_logs\\log_1741958476.txt",
+            "programma_logs\\log_1741958487.txt",
+            "programma_logs\\log_1741958498.txt",
+            "programma_logs\\log_1741958509.txt",
+            "programma_logs\\log_1741958519.txt",
+            "programma_logs\\log_1741958530.txt",
+            "programma_logs\\log_1741958541.txt",
+            "programma_logs\\log_1741958552.txt",
+            "programma_logs\\log_1741958563.txt",
+            "programma_logs\\log_1741958573.txt",
+            "programma_logs\\log_1741958584.txt",
+            "programma_logs\\log_1741958595.txt",
+            "programma_logs\\log_1741958605.txt",
+            "programma_logs\\log_1741958616.txt",
+            "programma_logs\\log_1741958627.txt"
+        ],
+        "status": "stopped"
+    },
+    "nwn": {
+        "logs": [
+            "nwn_logs\\log_1741959422.txt",
+            "nwn_logs\\log_1741959433.txt",
+            "nwn_logs\\log_1741959443.txt",
+            "nwn_logs\\log_1741959454.txt",
+            "nwn_logs\\log_1741959464.txt",
+            "nwn_logs\\log_1741959475.txt",
+            "nwn_logs\\log_1741959486.txt",
+            "nwn_logs\\log_1741959497.txt",
+            "nwn_logs\\log_1741959508.txt",
+            "nwn_logs\\log_1741959519.txt",
+            "nwn_logs\\log_1741959529.txt",
+            "nwn_logs\\log_1741959540.txt",
+            "nwn_logs\\log_1741959552.txt",
+            "nwn_logs\\log_1741959563.txt",
+            "nwn_logs\\log_1741959573.txt"
         ],
         "status": "stopped"
     }
