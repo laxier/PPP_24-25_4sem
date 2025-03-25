@@ -32,12 +32,11 @@ async def run_brut_force(task_id: int, hash_value: str, charset: str, max_length
                     found_password = candidate_password
                     break
 
-                # Обновляем прогресс в базе каждые 1000 проверенных вариантов
                 if processed % 1000 == 0:
                     progress = math.floor((processed / total_combinations) * 100)
                     task.progress = progress
                     await session.commit()
-                    await asyncio.sleep(0)  # даём возможность другим задачам выполняться
+                    await asyncio.sleep(1)  # даём возможность другим задачам выполняться
 
             if found_password:
                 break
