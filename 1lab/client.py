@@ -61,7 +61,7 @@ def main():
                         print("Server closed the connection.")
                         return
                     full_response += part
-                    if b"END_OF_RESPONSE" in full_response:
+                    if b"'END_OF_RESPONSE'" in full_response:
                         break
 
                 print("Server response:")

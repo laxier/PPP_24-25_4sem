@@ -33,7 +33,7 @@ def send_response(conn, message):
     """
     if isinstance(message, str):
         message = message.encode('utf-8')
-    message += b"END_OF_RESPONSE"
+    message += b"'END_OF_RESPONSE'"
     conn.send(message)
 
 
