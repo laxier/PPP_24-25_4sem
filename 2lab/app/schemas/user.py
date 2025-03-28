@@ -10,9 +10,10 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class UserResponse(UserBase):
-    id: int
-    token: str  # сгенерированный токен
+from pydantic import BaseModel
+from typing import Optional
 
-    class Config:
-        from_attributes = True
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    token: Optional[str] = None
