@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="94e557b2-7c0e-43f9-a843-ad4a28245fc4" name="Changes" comment="Fix login endpoint to return JWT token&#10;&#10;- Implemented token generation with JWT on successful login&#10;- Updated login logic to correctly generate and return an access token">
+    <list default="true" id="94e557b2-7c0e-43f9-a843-ad4a28245fc4" name="Changes" comment="added requirements.txt">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/2lab/app/db/app.db" beforeDir="false" afterPath="$PROJECT_DIR$/2lab/app/db/app.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,13 +33,23 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.test_json.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "last_opened_file_path": "C:/Users/adavramenko/Documents/PPP_24-25_4sem/scripts",
-    "node.js.selected.package.tslint": "(autodetect)"
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-5a2391486177-2887949eec09-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-233.13763.11" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -47,8 +58,21 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1743158325883</updated>
+      <workItem from="1744652029926" duration="143000" />
     </task>
+    <task id="LOCAL-00001" summary="added requirements.txt">
+      <option name="closed" value="true" />
+      <created>1743170222166</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1743170222166</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -61,7 +85,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="master" />
+                        <option value="origin/master" />
                       </list>
                     </value>
                   </entry>
@@ -75,13 +99,14 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Fix login endpoint to return JWT token&#10;&#10;- Implemented token generation with JWT on successful login&#10;- Updated login logic to correctly generate and return an access token" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix login endpoint to return JWT token&#10;&#10;- Implemented token generation with JWT on successful login&#10;- Updated login logic to correctly generate and return an access token" />
+    <MESSAGE value="added requirements.txt" />
+    <option name="LAST_COMMIT_MESSAGE" value="added requirements.txt" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/PPP_24_25_4sem$main.coverage" NAME="main Coverage Results" MODIFIED="1742911296177" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/2lab" />
     <SUITE FILE_PATH="coverage/PPP_24_25_4sem$python1.coverage" NAME="python1 Coverage Results" MODIFIED="1741957764744" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/1lab" />
     <SUITE FILE_PATH="coverage/PPP_24_25_4sem$server.coverage" NAME="server Coverage Results" MODIFIED="1741959681026" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/1lab" />
     <SUITE FILE_PATH="coverage/PPP_24_25_4sem$client.coverage" NAME="client Coverage Results" MODIFIED="1741959948370" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/1lab" />
-    <SUITE FILE_PATH="coverage/PPP_24_25_4sem$test_json.coverage" NAME="test_json Coverage Results" MODIFIED="1743166975612" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/2lab" />
+    <SUITE FILE_PATH="coverage/PPP_24_25_4sem$test_json.coverage" NAME="test_json Coverage Results" MODIFIED="1743170439371" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/2lab" />
   </component>
 </project>
