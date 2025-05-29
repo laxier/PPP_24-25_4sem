@@ -8,33 +8,51 @@ router = APIRouter(prefix="/api/v1")
 from pydantic import BaseModel
 
 class BruteforceRequest(BaseModel):
+    user_id: int
     target_hash: str
-    hash_type: str = "md5"
+    charset: str = "abcdefghijklmnopqrstuvwxyz0123456789"
     max_length: int = 8
-    charset: str = string.ascii_letters + string.digits
+    hash_type: str = "md5"
+
 
 @router.post("/bruteforce")
-async def start_bruteforce(req: BruteforceRequest):
+async def start_bruteforce(data: BruteforceRequest):
     task = bruteforce_task.delay(
-        0,
-        req.target_hash,
-        req.charset,
-        req.max_length,
-        req.hash_type
+        data.user_id,
+        data.target_hash,
+        data.charset,
+        data.max_length,
+        data.hash_type
     )
     return {"task_id": task.id, "status": "ENQUEUED"}
 
+# app/api/v1/routes.py
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import aioredis
 
-@router.websocket("/ws")
-async def websocket_endpoint(ws: WebSocket):
-    # Не проверяем токен, не достаём пользователя
-    fake_user_id = 0
-    await manager.connect(ws, fake_user_id)
+# from app.websocket.manager import manager  # manager теперь просто для connect/disconnect
+
+
+@router.websocket("/ws/{user_id}")
+async def websocket_endpoint(ws: WebSocket, user_id: int):
+    await manager.connect(ws, user_id)
+
+    # создаём асинхронный Redis и подписываемся
+    redis = await aioredis.create_redis("redis://localhost:6379/0")
+    channel, = await redis.subscribe(f"ws_{user_id}")
+
     try:
         while True:
-            await ws.receive_text()
+            # ждём публикацию от Celery
+            msg = await channel.get(encoding="utf-8")
+            await ws.send_text(msg)
     except WebSocketDisconnect:
-        manager.disconnect(ws, fake_user_id)
+        manager.disconnect(user_id)
+    finally:
+        await redis.unsubscribe(f"ws_{user_id}")
+        redis.close()
+        await redis.wait_closed()
+
 
 
 from celery.result import AsyncResult

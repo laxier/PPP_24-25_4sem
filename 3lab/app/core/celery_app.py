@@ -3,11 +3,17 @@ from app.core.settings import get_settings
 
 settings = get_settings()
 
+# app/core/celery_app.py
+
+from celery import Celery
+
 celery = Celery(
     "bruteforce",
-    broker=settings.broker_url,
-    backend=settings.result_backend,
+    broker="redis://localhost:6380/0",
+    backend="redis://localhost:6380/0"
 )
+
+celery.autodiscover_tasks(["app.celery"])
 
 celery.conf.update(
     task_serializer="json",

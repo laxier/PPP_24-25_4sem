@@ -1,51 +1,42 @@
-import itertools, string, time, hashlib
+# app/celery/tasks.py
+import itertools, time, hashlib, json
 from datetime import timedelta
+from celery import Celery
+import redis
+
 from app.core.celery_app import celery
-from app.websocket.manager import manager
+
+# создаём синхронный клиент Redis — он используется только внутри Celery
+redis_client = redis.Redis(host="localhost", port=6380, db=0)
+
+def publish_status(user_id: int, message: dict):
+    channel = f"ws_{user_id}"
+    redis_client.publish(channel, json.dumps(message))
 
 @celery.task(bind=True)
 def bruteforce_task(self, user_id: int, target_hash: str,
                     charset: str, max_len: int, hash_type: str = "md5"):
 
+    print(f"🔧 Task {self.request.id} started for user {user_id}")
     algo = getattr(hashlib, hash_type)
-    combos = 0
     start = time.perf_counter()
-
-    manager.send_json(user_id, {
-        "status": "STARTED",
-        "task_id": self.request.id,
-        "hash_type": hash_type,
-        "charset_length": len(charset),
-        "max_length": max_len,
-    })
 
     for length in range(1, max_len + 1):
         for chars in itertools.product(charset, repeat=length):
-            guess = ''.join(chars)
-            combos += 1
-
-            if combos % 10_000 == 0:
-                elapsed = time.perf_counter() - start
-                progress = int((length / max_len) * 100)
-                cps = int(combos / elapsed)
-                manager.send_json(user_id, {
-                    "status": "PROGRESS",
-                    "task_id": self.request.id,
-                    "progress": progress,
-                    "current_combination": guess,
-                    "combinations_per_second": cps,
-                })
-
+            guess = "".join(chars)
             if algo(guess.encode()).hexdigest() == target_hash:
-                manager.send_json(user_id, {
+                elapsed = str(timedelta(seconds=int(time.perf_counter() - start)))
+                print(f"✅ Found {guess} in {elapsed}")
+                publish_status(user_id, {
                     "status": "COMPLETED",
                     "task_id": self.request.id,
                     "result": guess,
-                    "elapsed_time": str(timedelta(seconds=int(time.perf_counter() - start))),
+                    "elapsed_time": elapsed,
                 })
                 return guess
 
-    manager.send_json(user_id, {
+    print("❌ Not found")
+    publish_status(user_id, {
         "status": "FAILED",
         "task_id": self.request.id,
         "message": "Password not found",
