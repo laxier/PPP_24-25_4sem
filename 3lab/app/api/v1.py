@@ -38,7 +38,7 @@ async def websocket_endpoint(ws: WebSocket, user_id: int):
     await manager.connect(ws, user_id)
 
     # создаём асинхронный Redis и подписываемся
-    redis = await aioredis.create_redis("redis://localhost:6379/0")
+    redis = await aioredis.create_redis("redis://localhost:6380/0")
     channel, = await redis.subscribe(f"ws_{user_id}")
 
     try:
