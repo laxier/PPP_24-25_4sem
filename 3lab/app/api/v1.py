@@ -5,16 +5,25 @@ from app.celery.tasks import bruteforce_task
 
 router = APIRouter(prefix="/api/v1")
 
+from pydantic import BaseModel
+
+class BruteforceRequest(BaseModel):
+    target_hash: str
+    hash_type: str = "md5"
+    max_length: int = 8
+    charset: str = string.ascii_letters + string.digits
+
 @router.post("/bruteforce")
-async def start_bruteforce(
-    target_hash: str,
-    hash_type: str = "md5",
-    max_length: int = 8,
-    charset: str = string.ascii_letters + string.digits,
-):
-    # Просто ставим user_id как 0 или любой другой, если он обязателен
-    task = bruteforce_task.delay(0, target_hash, charset, max_length, hash_type)
+async def start_bruteforce(req: BruteforceRequest):
+    task = bruteforce_task.delay(
+        0,
+        req.target_hash,
+        req.charset,
+        req.max_length,
+        req.hash_type
+    )
     return {"task_id": task.id, "status": "ENQUEUED"}
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
